@@ -21,14 +21,18 @@ class _HomeState extends State<Home>
   AnimationController _controllerText;
   AnimationController _scaleController;
   AnimationController _showFuckController;
+  AnimationController _opacityController;
   Animation<double> _animationMenu;
   Animation<double> _animationText;
   Animation<double> _frontScale;
   Animation<double> _backScale;
-  Animation<Offset> _showFuck;
+  Animation<Offset> _showEasy;
+  Animation<double> _opacity;
   bool _menuOpened = false;
-  bool _showfuck = false;
-  double _height;
+  bool _showeasy = false;
+  bool _openedOnce = false;
+  bool _isMenuAvailable = true;
+  
 
   @override
   void initState() {
@@ -37,6 +41,7 @@ class _HomeState extends State<Home>
     _controllerText = new AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
     _scaleController = new AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
     _showFuckController = new AnimationController(vsync: this, duration: const Duration(milliseconds: 2000));
+    _opacityController = new AnimationController(vsync: this,duration: const Duration(milliseconds: 800));
     _animationMenu = new Tween(begin: 0.3, end: 1.0).animate(
       new CurvedAnimation(
         parent: _controllerMenu,
@@ -51,8 +56,14 @@ class _HomeState extends State<Home>
         _menuOpened = !_menuOpened;
         _controllerText.forward();
       }
-      if(status == AnimationStatus.dismissed && _showfuck){
-        _showFuckController.forward();
+      if(status == AnimationStatus.dismissed ){
+        if (_showeasy) {
+          _showFuckController.forward();
+          setState(()=>_showeasy = false);
+        }
+        else{
+          setState(()=>_openedOnce = false);
+        }
       }
     });
 
@@ -73,19 +84,23 @@ class _HomeState extends State<Home>
       }
 
     });
-    _showFuck = new Tween(
+    _showEasy = new Tween(
       begin: new Offset(0.0,3.0),
       end: new Offset(0.0,0.0),
     ).animate(new CurvedAnimation(
       parent: _showFuckController,
       curve: new Interval(0.0, 0.5, curve: Curves.easeInOut),
     ));
-    _showFuck.addStatusListener((status){
+    _showEasy.addStatusListener((status){
       if(status == AnimationStatus.completed ){
         _scaleController.forward();
       }
       if(status == AnimationStatus.dismissed){
         _scaleController.reverse();
+        setState((){
+          _openedOnce = false;
+          _isMenuAvailable = true;
+        });
       }
     });
 
@@ -113,6 +128,15 @@ class _HomeState extends State<Home>
         _showFuckController.reverse();
       }
     });
+    
+    _opacity = new CurvedAnimation(parent: _opacityController, curve: Curves.easeInOut)..addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _opacityController.reverse();
+      } else if (status == AnimationStatus.dismissed) {
+        _opacityController.forward();
+      }
+    });
+    _opacityController.forward();
   }
 
   @override
@@ -127,6 +151,22 @@ class _HomeState extends State<Home>
         child: new Stack(
           alignment: Alignment.center,
           children: <Widget>[
+            !_openedOnce?new FadeTransition(
+              opacity: _opacity,
+              child: new Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  new Icon(Icons.arrow_back),
+                  new Padding(padding: const EdgeInsets.only(left: 8.0)),
+                  new Text("Swipe it",
+                    style: new TextStyle(
+                        fontSize: 16.0,
+                        color: Colors.blueGrey
+                    ),
+                  )
+                ],
+              ),
+            ):new Container(),
             new Align(
               child: new GestureDetector(
                 child: new Container(
@@ -139,8 +179,10 @@ class _HomeState extends State<Home>
                   ),
                 ),
                 onHorizontalDragEnd: (details) {
+                  if(!_isMenuAvailable) return;
                   if (details.velocity.pixelsPerSecond.dx > 0 && !_menuOpened) {
                     print("Open");
+                    setState(()=>_openedOnce = true);
                     _controllerMenu.forward();
                   }
                   else if (details.velocity.pixelsPerSecond.dx < 0 && _menuOpened) {
@@ -165,24 +207,27 @@ class _HomeState extends State<Home>
                   ),
                   onTap: (){
                     _controllerText.reverse();
-                    _showfuck = true;
+                    setState((){
+                      _showeasy = true;
+                      _isMenuAvailable = false;
+                    });
                   },
                 ),
               ),
               alignment: Alignment.centerLeft,
             ),
-            new SlideTransition(position: _showFuck,
+            new SlideTransition(position: _showEasy,
               child: new Stack(
                 children: <Widget>[
                   new Transform(transform:  new Matrix4.identity()
                 ..scale(1.0, _backScale.value, 1.0),
                     alignment: FractionalOffset.center,
-                    child: new FuckYouCard("images/too_easy.jpeg"),
+                    child: new EasyCard("images/too_easy.jpeg"),
                   ),
                   new Transform(transform:  new Matrix4.identity()
                     ..scale(1.0, _frontScale.value, 1.0),
                     alignment: FractionalOffset.center,
-                    child: new FuckYouCard(null),
+                    child: new EasyCard(null),
                   ),
                 ],
               )
@@ -213,10 +258,10 @@ class HillClipper extends CustomClipper<Path>{
 }
 
 
-class FuckYouCard extends StatelessWidget {
+class EasyCard extends StatelessWidget {
   final String image;
   
-  FuckYouCard(this.image);
+  EasyCard(this.image);
 
   @override
   Widget build(BuildContext context) {
