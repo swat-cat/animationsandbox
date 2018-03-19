@@ -20,7 +20,7 @@ class _HomeState extends State<Home>
   AnimationController _controllerMenu;
   AnimationController _controllerText;
   AnimationController _scaleController;
-  AnimationController _showFuckController;
+  AnimationController _showEasyController;
   AnimationController _opacityController;
   Animation<double> _animationMenu;
   Animation<double> _animationText;
@@ -40,7 +40,7 @@ class _HomeState extends State<Home>
     _controllerMenu = new AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
     _controllerText = new AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
     _scaleController = new AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
-    _showFuckController = new AnimationController(vsync: this, duration: const Duration(milliseconds: 2000));
+    _showEasyController = new AnimationController(vsync: this, duration: const Duration(milliseconds: 2000));
     _opacityController = new AnimationController(vsync: this,duration: const Duration(milliseconds: 800));
     _animationMenu = new Tween(begin: 0.3, end: 1.0).animate(
       new CurvedAnimation(
@@ -58,7 +58,7 @@ class _HomeState extends State<Home>
       }
       if(status == AnimationStatus.dismissed ){
         if (_showeasy) {
-          _showFuckController.forward();
+          _showEasyController.forward();
           setState(()=>_showeasy = false);
         }
         else{
@@ -88,7 +88,7 @@ class _HomeState extends State<Home>
       begin: new Offset(0.0,3.0),
       end: new Offset(0.0,0.0),
     ).animate(new CurvedAnimation(
-      parent: _showFuckController,
+      parent: _showEasyController,
       curve: new Interval(0.0, 0.5, curve: Curves.easeInOut),
     ));
     _showEasy.addStatusListener((status){
@@ -125,7 +125,7 @@ class _HomeState extends State<Home>
 
     _backScale.addStatusListener((status){
       if(status == AnimationStatus.completed){
-        _showFuckController.reverse();
+        _showEasyController.reverse();
       }
     });
     
@@ -143,6 +143,10 @@ class _HomeState extends State<Home>
   void dispose() {
     super.dispose();
     _controllerMenu.dispose();
+    _controllerText.dispose();
+    _opacityController.dispose();
+    _scaleController.dispose();
+    _showEasyController.dispose();
   }
 
   @override
